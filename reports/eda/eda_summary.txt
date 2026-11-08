@@ -1,0 +1,37 @@
+Smart Retail Intelligence - Exploratory Data Analysis
+
+Data sources:
+- Sales analysis: data/processed/sales_transactions.csv
+- Returns/cancellations: data/processed/returns_cancellations.csv
+- Classification validation: data/processed/transactions_clean.csv
+
+Sales overview:
+- Total revenue: 10305892.02
+- Total quantity sold: 6011584
+- Unique invoices: 22100
+- Unique products: 4316
+- Unique customers: 4314
+- Average order value: 466.33
+
+Time analysis:
+- Highest revenue month: 2010-11
+- Lowest revenue month: 2010-12
+
+Top findings:
+- Top product by revenue: M (262606.01)
+- Top product by quantity: 21212
+- Top country by revenue: United Kingdom (8845755.69)
+- Top customer by revenue: 18102.0 (349164.35)
+
+Returns and cancellations:
+- Return records: 12326
+- Cancellation records: 10206
+
+Assumptions and exclusions:
+- Invoice is treated as an order identifier; unique invoices are counted, not rows.
+- Revenue is Quantity multiplied by Price, using the signed cleaned values.
+- Missing Customer IDs are excluded only from customer-specific analysis.
+- Sales metrics use sales_transactions.csv; return/cancellation metrics use the exception dataset.
+- Return and cancellation flags remain separate and may overlap.
+- Master rows validated: 525461; sales rows analyzed: 513131.
+- No raw or processed input dataset was modified.
