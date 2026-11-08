@@ -1,0 +1,2 @@
+input_rows,master_rows,sales_rows,returns_cancellations_rows,exact_duplicate_rows,missing_customer_id_rows,missing_description_rows,negative_quantity_rows,cancelled_invoice_rows,negative_price_rows,zero_price_rows,input_revenue,master_revenue,sales_revenue,returns_cancellations_revenue
+525461,525461,513131,12327,6865,107927,2928,12326,10206,3,3687,9539484.634,9539484.634,10305892.024,-629855.37
