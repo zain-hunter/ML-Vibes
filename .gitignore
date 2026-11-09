@@ -21,5 +21,10 @@ __pycache__/
 # Local project archives
 *.zip
 
+# Large generated modeling datasets (regenerate from source scripts)
+data/features/final_modeling_dataset.csv
+data/features/product_daily_rolling_features.csv
+data/features/train_dataset.csv
+
 # Notebook-generated runtime files
 .ipynb_checkpoints/
