@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">Executive overview</p><h1>Retail performance at a glance</h1><p class="text-muted">Sales-only analytics from the prepared transaction dataset.</p></div><span id="health-badge" class="status-badge">Checking model...</span></div>
+<div id="dashboard-error" class="alert alert-danger d-none"></div>
+<div class="row g-3 mb-4" id="kpis">
+  <div class="col-6 col-xl-3"><div class="kpi-card"><span>Total revenue</span><strong id="kpi-revenue">—</strong><small>Dataset currency units</small></div></div>
+  <div class="col-6 col-xl-3"><div class="kpi-card"><span>Quantity sold</span><strong id="kpi-quantity">—</strong><small>Positive sales only</small></div></div>
+  <div class="col-6 col-xl-3"><div class="kpi-card"><span>Invoices</span><strong id="kpi-invoices">—</strong><small>Sales invoices</small></div></div>
+  <div class="col-6 col-xl-3"><div class="kpi-card"><span>Products</span><strong id="kpi-products">—</strong><small>Unique StockCodes</small></div></div>
+</div>
+<div class="notice mb-4">December 2010 is a partial month. Revenue is not profit; the source dataset does not specify a currency.</div>
+<div class="row g-4">
+  <div class="col-lg-8"><section class="panel"><h2>Monthly sales trend</h2><div id="monthly-chart" class="chart"></div></section></div>
+  <div class="col-lg-4"><section class="panel"><h2>Country revenue</h2><div id="country-chart" class="chart"></div></section></div>
+  <div class="col-lg-6"><section class="panel"><h2>Top products by revenue</h2><div id="revenue-chart" class="chart"></div></section></div>
+  <div class="col-lg-6"><section class="panel"><h2>Top products by quantity</h2><div id="quantity-chart" class="chart"></div></section></div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>{% endblock %}

@@ -6,14 +6,16 @@ from functools import lru_cache
 from typing import Any
 
 import pandas as pd
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, render_template, request
 
 from src.backend.config import (
     API_VERSION,
     METADATA_PATH,
     MODEL_PATH,
     PRODUCT_DATA_PATH,
+    SALES_DATA_PATH,
 )
+from src.backend.services.analytics_service import AnalyticsService
 from src.backend.services.model_service import ModelService
 from src.backend.services.prediction_service import PredictionService
 from src.backend.utils.validators import validate_row
@@ -35,14 +37,28 @@ def error_response(message: str, status: int):
 def create_app(
     model_service: ModelService | None = None,
     product_codes: set[str] | None = None,
+    analytics_service: AnalyticsService | None = None,
 ) -> Flask:
     """Create and configure the Flask application."""
-    app = Flask(__name__)
+    app = Flask(__name__, template_folder="templates", static_folder="static")
     service = model_service or ModelService(MODEL_PATH, METADATA_PATH)
     prediction_service = PredictionService(service)
+    analytics = analytics_service or AnalyticsService(SALES_DATA_PATH, PRODUCT_DATA_PATH)
 
     def products() -> set[str]:
         return product_codes if product_codes is not None else set(load_products())
+
+    @app.get("/")
+    def dashboard():
+        return render_template("dashboard.html")
+
+    @app.get("/products")
+    def products_page():
+        return render_template("products.html")
+
+    @app.get("/forecasting")
+    def forecasting_page():
+        return render_template("forecasting.html", feature_columns=service.feature_columns)
 
     @app.get("/api/health")
     def health():
@@ -114,6 +130,46 @@ def create_app(
                 "results": results,
             }
         ), 200
+
+    @app.get("/api/analytics/summary")
+    def analytics_summary():
+        try:
+            return jsonify(analytics.summary()), 200
+        except (OSError, ValueError, pd.errors.ParserError) as error:
+            return error_response(str(error), 500)
+
+    @app.get("/api/analytics/top-products")
+    def analytics_top_products():
+        try:
+            return jsonify(analytics.top_products()), 200
+        except (OSError, ValueError, pd.errors.ParserError) as error:
+            return error_response(str(error), 500)
+
+    @app.get("/api/analytics/countries")
+    def analytics_countries():
+        try:
+            return jsonify({"countries": analytics.countries()}), 200
+        except (OSError, ValueError, pd.errors.ParserError) as error:
+            return error_response(str(error), 500)
+
+    @app.get("/api/analytics/product/<stock_code>")
+    def analytics_product(stock_code: str):
+        if stock_code not in products():
+            return error_response("product was not found", 404)
+        try:
+            result = analytics.product(stock_code)
+        except (OSError, ValueError, pd.errors.ParserError) as error:
+            return error_response(str(error), 500)
+        return jsonify(result), 200
+
+    @app.get("/api/forecast-rows/<stock_code>")
+    def forecast_rows(stock_code: str):
+        if stock_code not in products():
+            return error_response("product was not found", 404)
+        try:
+            return jsonify({"rows": analytics.forecast_rows(stock_code)}), 200
+        except (OSError, ValueError, pd.errors.ParserError) as error:
+            return error_response(str(error), 500)
 
     return app
 

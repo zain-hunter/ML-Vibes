@@ -20,7 +20,6 @@ NONNEGATIVE_FEATURES = {
     "DemandRollingMean7",
     "DemandRollingMean14",
     "DemandRollingMean28",
-    "DemandTrend7_28",
 }
 
 

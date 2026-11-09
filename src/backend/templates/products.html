@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">Product intelligence</p><h1>Product analytics</h1><p class="text-muted">Search sales history and daily demand for any available product.</p></div></div>
+<div class="row g-4">
+  <div class="col-lg-4"><section class="panel"><label for="product-select" class="form-label">StockCode</label><select id="product-select" class="form-select"><option>Loading products...</option></select><div id="product-error" class="alert alert-danger d-none mt-3"></div><div id="product-summary" class="mt-4"></div></section></div>
+  <div class="col-lg-8"><section class="panel"><h2>Daily quantity trend</h2><div id="product-chart" class="chart"></div></section></div>
+</div>
+<section class="panel mt-4"><h2>Top-performing products</h2><div id="top-products" class="table-responsive"></div></section>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/products.js') }}"></script>{% endblock %}
