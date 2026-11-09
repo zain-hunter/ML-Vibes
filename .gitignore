@@ -1,0 +1,25 @@
+# Python environments and caches
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local environment and IDE files
+.env
+.env.*
+.vscode/
+.idea/
+
+# Local logs and temporary files
+*.log
+*.tmp
+*.temp
+
+# Local project archives
+*.zip
+
+# Notebook-generated runtime files
+.ipynb_checkpoints/

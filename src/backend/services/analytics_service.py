@@ -73,6 +73,23 @@ class AnalyticsService:
             "by_quantity": by_quantity.to_dict("records"),
         }
 
+    def product_catalog(self) -> list[dict[str, str | None]]:
+        """Return product codes with their first available descriptions."""
+        frame = self.sales()
+        catalog = (
+            frame[["StockCode", "Description"]]
+            .drop_duplicates("StockCode")
+            .sort_values("StockCode")
+            .fillna({"Description": "Description unavailable"})
+        )
+        return [
+            {
+                "StockCode": str(row["StockCode"]),
+                "Description": str(row["Description"]),
+            }
+            for _, row in catalog.iterrows()
+        ]
+
     def countries(self) -> list[dict[str, Any]]:
         frame = self.sales()
         return (

@@ -55,6 +55,13 @@ def test_products_endpoint_returns_strings(client):
     assert all(isinstance(code, str) for code in response.json["products"])
 
 
+def test_product_catalog_returns_codes_and_descriptions(client):
+    response = client.get("/api/product-catalog")
+    assert response.status_code == 200
+    assert response.json["count"] > 0
+    assert {"StockCode", "Description"} <= set(response.json["products"][0])
+
+
 def test_forecast_endpoint_returns_nonnegative_prediction(client):
     response = client.post("/api/forecast", json=valid_row())
     assert response.status_code == 200
@@ -115,6 +122,13 @@ def test_dashboard_pages_load(client):
         response = client.get(path)
         assert response.status_code == 200
         assert b"Smart Retail Intelligence" in response.data
+
+
+def test_forecasting_page_includes_prediction_chart(client):
+    response = client.get("/forecasting")
+    assert response.status_code == 200
+    assert b"forecast-chart" in response.data
+    assert b"historical lag inputs" in response.data
 
 
 def test_analytics_endpoints_return_data(client):

@@ -4,7 +4,7 @@
 <div class="notice mb-4">A StockCode alone cannot produce a valid forecast. This page uses historical rows with complete lag and rolling features; it does not use current-day target demand.</div>
 <div class="row g-4">
   <div class="col-lg-4"><section class="panel"><label for="forecast-product" class="form-label">Product</label><select id="forecast-product" class="form-select mb-3"></select><label for="forecast-row" class="form-label">Historical feature date</label><select id="forecast-row" class="form-select mb-3"></select><button id="forecast-button" class="btn btn-primary w-100">Predict demand</button><div id="forecast-status" class="mt-3"></div></section></div>
-  <div class="col-lg-8"><section class="panel"><h2>Prediction result</h2><div id="forecast-result" class="empty-state">Select a product and historical feature row.</div><div class="small text-muted mt-3">This is a model prediction demonstration for the selected historical feature row, not a live future forecast.</div></section></div>
+  <div class="col-lg-8"><section class="panel"><h2>Prediction result</h2><div id="forecast-result" class="empty-state">Select a product and historical feature row.</div><div id="forecast-chart" class="chart mt-3 d-none"></div><div class="small text-muted mt-3">The chart compares historical lag inputs with the model estimate. This is a model prediction demonstration for the selected historical feature row, not a live future forecast.</div></section></div>
 </div>
 {% endblock %}
-{% block scripts %}<script src="{{ url_for('static', filename='js/forecasting.js') }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/forecasting.js', v='5') }}"></script>{% endblock %}

@@ -81,6 +81,14 @@ def create_app(
             return error_response(str(error), 500)
         return jsonify({"products": values, "count": len(values)}), 200
 
+    @app.get("/api/product-catalog")
+    def product_catalog():
+        try:
+            values = analytics.product_catalog()
+        except (OSError, ValueError, pd.errors.ParserError) as error:
+            return error_response(str(error), 500)
+        return jsonify({"products": values, "count": len(values)}), 200
+
     @app.post("/api/forecast")
     def forecast():
         if not service.is_loaded:
