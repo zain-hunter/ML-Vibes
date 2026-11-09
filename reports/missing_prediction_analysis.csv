@@ -1,0 +1,16 @@
+Feature,MissingRows,MissingPercentOfTest,MissingRowsWithOtherMissingFeatures,ProductsWithMissingFeatures,ProductsStartingInTest,RollingWindowCause,TestRows,RowsWithAnyMissingModelFeature,Interpretation
+Year,0,0.0,0,280,189,,215239,5598,Missing rolling and lag values are retained because historical windows are unavailable; no imputation is performed.
+Month,0,0.0,0,280,189,,215239,5598,Missing rolling and lag values are retained because historical windows are unavailable; no imputation is performed.
+Day,0,0.0,0,280,189,,215239,5598,Missing rolling and lag values are retained because historical windows are unavailable; no imputation is performed.
+WeekdayNumber,0,0.0,0,280,189,,215239,5598,Missing rolling and lag values are retained because historical windows are unavailable; no imputation is performed.
+IsWeekend,0,0.0,0,280,189,,215239,5598,Missing rolling and lag values are retained because historical windows are unavailable; no imputation is performed.
+DemandLag1,189,0.08780936540311003,189,280,189,,215239,5598,Missing rolling and lag values are retained because historical windows are unavailable; no imputation is performed.
+DemandLag7,1215,0.5644887775914216,1215,280,189,,215239,5598,Missing rolling and lag values are retained because historical windows are unavailable; no imputation is performed.
+DemandLag14,2660,1.2358355130808079,2660,280,189,,215239,5598,Missing rolling and lag values are retained because historical windows are unavailable; no imputation is performed.
+DemandLag28,5598,2.6008297752730685,5598,280,189,,215239,5598,Missing rolling and lag values are retained because historical windows are unavailable; no imputation is performed.
+DemandRollingMean7,1215,0.5644887775914216,1215,280,189,,215239,5598,Missing rolling and lag values are retained because historical windows are unavailable; no imputation is performed.
+DemandRollingMean14,2660,1.2358355130808079,2660,280,189,,215239,5598,Missing rolling and lag values are retained because historical windows are unavailable; no imputation is performed.
+DemandRollingMean28,5598,2.6008297752730685,5598,280,189,,215239,5598,Missing rolling and lag values are retained because historical windows are unavailable; no imputation is performed.
+DemandTrend7_28,5598,2.6008297752730685,5598,280,189,,215239,5598,Missing rolling and lag values are retained because historical windows are unavailable; no imputation is performed.
+Product-level missingness summary,280,2.6008297752730685,280,280,189,,215239,5598,Missing rolling and lag values are retained because historical windows are unavailable; no imputation is performed.
+New-product and insufficient-history summary,3934,67.5,5598,280,189,Rows are missing until the required historical lag/rolling window exists.,215239,5598,Missing rolling and lag values are retained because historical windows are unavailable; no imputation is performed.

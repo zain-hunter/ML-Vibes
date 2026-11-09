@@ -1,0 +1,72 @@
+{
+  "final_model_name": "Random Forest",
+  "model_type": "RandomForestRegressor",
+  "selected_hyperparameters": {
+    "n_estimators": 100,
+    "max_depth": 15,
+    "min_samples_leaf": 5,
+    "max_features": 1.0,
+    "max_samples": 0.5,
+    "random_state": 42
+  },
+  "feature_columns": [
+    "StockCode",
+    "Year",
+    "Month",
+    "Day",
+    "WeekdayNumber",
+    "IsWeekend",
+    "DemandLag1",
+    "DemandLag7",
+    "DemandLag14",
+    "DemandLag28",
+    "DemandRollingMean7",
+    "DemandRollingMean14",
+    "DemandRollingMean28",
+    "DemandTrend7_28"
+  ],
+  "target_column": "DailyQuantityDemand",
+  "training_date_range": [
+    "2009-12-01",
+    "2010-09-25"
+  ],
+  "test_date_range": [
+    "2010-09-26",
+    "2010-12-09"
+  ],
+  "evaluation_metrics": {
+    "Model": "Random Forest",
+    "EvaluatedObservations": 209641,
+    "MAE": 8.149165399581516,
+    "RMSE": 60.80339376156608,
+    "WAPE": 102.06222569919402,
+    "MeanActualDemand": 7.984506847420113,
+    "MeanPredictedDemand": 7.041856600381128,
+    "ImprovementVsOriginalRFPercent": 0.0,
+    "ImprovementVsSeasonalNaivePercent": 21.04371790106388,
+    "TrainingObservations": 822648,
+    "CommonObservationSet": 209641
+  },
+  "training_row_count": 930130,
+  "test_row_count": 215239,
+  "model_version": "phase6-v1",
+  "forecasting_assumptions": [
+    "Chronological train/test evaluation is preserved.",
+    "Only historical lag and rolling features are used.",
+    "Unavailable historical features are not imputed.",
+    "Fallbacks use DemandLag7, then DemandLag1, without future demand."
+  ],
+  "fallback_summary": {
+    "Coverage_optimized_random_forest": 209641,
+    "Coverage_seasonal_naive_fallback": 4383,
+    "Coverage_lag1_fallback": 1026,
+    "Coverage_unavailable": 189,
+    "CoveredRows": 215050,
+    "RemainingUnavailable": 189,
+    "CombinedMAE": 8.376226657050026,
+    "CombinedRMSE": 60.66316494942271,
+    "CombinedWAPE": 103.16761230942066,
+    "CombinedMeanActualDemand": 8.119046733317832,
+    "CombinedMeanPredictedDemand": 7.362489714486941
+  }
+}
