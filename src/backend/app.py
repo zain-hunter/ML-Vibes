@@ -10,12 +10,17 @@ from flask import Flask, jsonify, render_template, request
 
 from src.backend.config import (
     API_VERSION,
+    CALENDAR_DATA_PATH,
     METADATA_PATH,
     MODEL_PATH,
     PRODUCT_DATA_PATH,
     SALES_DATA_PATH,
 )
 from src.backend.services.analytics_service import AnalyticsService
+from src.backend.services.future_forecast_service import (
+    FutureForecastError,
+    FutureForecastService,
+)
 from src.backend.services.model_service import ModelService
 from src.backend.services.prediction_service import PredictionService
 from src.backend.utils.validators import validate_row
@@ -44,6 +49,7 @@ def create_app(
     service = model_service or ModelService(MODEL_PATH, METADATA_PATH)
     prediction_service = PredictionService(service)
     analytics = analytics_service or AnalyticsService(SALES_DATA_PATH, PRODUCT_DATA_PATH)
+    future_forecast = FutureForecastService(CALENDAR_DATA_PATH, service)
 
     def products() -> set[str]:
         return product_codes if product_codes is not None else set(load_products())
@@ -88,6 +94,33 @@ def create_app(
         except (OSError, ValueError, pd.errors.ParserError) as error:
             return error_response(str(error), 500)
         return jsonify({"products": values, "count": len(values)}), 200
+
+    @app.get("/api/future-forecast-products")
+    def future_forecast_products():
+        try:
+            catalog = analytics.product_catalog()
+            values = []
+            for product in catalog:
+                product = dict(product)
+                product.update(
+                    future_forecast.product_readiness(product["StockCode"])
+                )
+                values.append(product)
+        except (FutureForecastError, OSError, ValueError, pd.errors.ParserError) as error:
+            return error_response(str(error), 500)
+        return jsonify(
+            {
+                "products": values,
+                "count": len(values),
+                "ready_count": sum(
+                    bool(product["forecast_ready"]) for product in values
+                ),
+                "hint": (
+                    "Products marked unavailable are disabled because recursive "
+                    "forecasting needs consecutive history through the dataset cutoff."
+                ),
+            }
+        ), 200
 
     @app.post("/api/forecast")
     def forecast():
@@ -136,6 +169,90 @@ def create_app(
                 "successful": len(valid_rows),
                 "failed": len(payload) - len(valid_rows),
                 "results": results,
+            }
+        ), 200
+
+    def parse_date(value: Any, field_name: str) -> pd.Timestamp:
+        if not isinstance(value, str):
+            raise FutureForecastError(f"{field_name} must be an ISO date string.")
+        parsed = pd.to_datetime(value, format="%Y-%m-%d", errors="coerce")
+        if pd.isna(parsed):
+            raise FutureForecastError(
+                f"{field_name} must use YYYY-MM-DD format."
+            )
+        return pd.Timestamp(parsed)
+
+    @app.post("/api/forecast/future")
+    def future_forecast_single():
+        if not service.is_loaded:
+            return error_response("forecasting model is unavailable", 503)
+        payload: Any = request.get_json(silent=True)
+        if not isinstance(payload, dict):
+            return error_response("request must be a JSON object", 400)
+        stock_code = payload.get("StockCode")
+        if not isinstance(stock_code, str):
+            return error_response("valid StockCode is required", 400)
+        if stock_code not in products():
+            return error_response("product was not found", 404)
+        try:
+            target_date = parse_date(payload.get("target_date"), "target_date")
+            result = future_forecast.forecast(stock_code, target_date)
+        except FutureForecastError as error:
+            return error_response(str(error), 400)
+        except (RuntimeError, TypeError, KeyError, ValueError) as error:
+            return error_response(f"future prediction failed: {error}", 500)
+        return jsonify(
+            {
+                "success": True,
+                "StockCode": result.stock_code,
+                "target_date": result.target_date.strftime("%Y-%m-%d"),
+                "predicted_daily_demand": result.predicted_demand,
+                "prediction_unit": "units",
+                "historical_cutoff": result.historical_cutoff.strftime("%Y-%m-%d"),
+                "forecast_steps": result.forecast_steps,
+                "forecast_method": "recursive_random_forest",
+                "warning": "Experimental prediction based on historical data ending in "
+                f"{result.historical_cutoff.strftime('%Y-%m-%d')}.",
+            }
+        ), 200
+
+    @app.post("/api/forecast/future/range")
+    def future_forecast_range():
+        if not service.is_loaded:
+            return error_response("forecasting model is unavailable", 503)
+        payload: Any = request.get_json(silent=True)
+        if not isinstance(payload, dict):
+            return error_response("request must be a JSON object", 400)
+        stock_code = payload.get("StockCode")
+        if not isinstance(stock_code, str):
+            return error_response("valid StockCode is required", 400)
+        if stock_code not in products():
+            return error_response("product was not found", 404)
+        try:
+            start_date = parse_date(payload.get("start_date"), "start_date")
+            end_date = parse_date(payload.get("end_date"), "end_date")
+            results = future_forecast.forecast_range(
+                stock_code, start_date, end_date
+            )
+        except FutureForecastError as error:
+            return error_response(str(error), 400)
+        except (RuntimeError, TypeError, KeyError, ValueError) as error:
+            return error_response(f"future prediction failed: {error}", 500)
+        return jsonify(
+            {
+                "success": True,
+                "StockCode": stock_code,
+                "historical_cutoff": results[0].historical_cutoff.strftime("%Y-%m-%d"),
+                "forecast_method": "recursive_random_forest",
+                "warning": "Experimental predictions use prior predictions recursively.",
+                "predictions": [
+                    {
+                        "date": result.target_date.strftime("%Y-%m-%d"),
+                        "predicted_daily_demand": result.predicted_demand,
+                        "forecast_steps": result.forecast_steps,
+                    }
+                    for result in results
+                ],
             }
         ), 200
 

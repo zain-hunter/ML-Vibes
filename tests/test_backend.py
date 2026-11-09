@@ -5,10 +5,12 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
 from src.backend.app import create_app, load_products
-from src.backend.config import METADATA_PATH, MODEL_PATH
+from src.backend.config import CALENDAR_DATA_PATH, METADATA_PATH, MODEL_PATH
+from src.backend.services.future_forecast_service import FutureForecastService
 from src.backend.services.model_service import ModelService
 
 
@@ -60,6 +62,15 @@ def test_product_catalog_returns_codes_and_descriptions(client):
     assert response.status_code == 200
     assert response.json["count"] > 0
     assert {"StockCode", "Description"} <= set(response.json["products"][0])
+
+
+def test_future_forecast_catalog_explains_product_readiness(client):
+    response = client.get("/api/future-forecast-products")
+    assert response.status_code == 200
+    assert response.json["count"] > 0
+    assert response.json["ready_count"] > 0
+    product = response.json["products"][0]
+    assert {"forecast_ready", "readiness_hint", "history_days"} <= set(product)
 
 
 def test_forecast_endpoint_returns_nonnegative_prediction(client):
@@ -161,3 +172,87 @@ def test_forecast_rows_endpoint_returns_engineered_rows(client):
 def test_unknown_product_returns_not_found(client):
     assert client.get("/api/analytics/product/not-a-product").status_code == 404
     assert client.get("/api/forecast-rows/not-a-product").status_code == 404
+
+
+def test_future_forecast_endpoint_returns_recursive_prediction(client):
+    response = client.post(
+        "/api/forecast/future",
+        json={"StockCode": "10002", "target_date": "2010-12-10"},
+    )
+    assert response.status_code == 200
+    assert response.json["forecast_steps"] == 1
+    assert response.json["predicted_daily_demand"] >= 0
+
+
+def test_future_range_endpoint_returns_every_day(client):
+    response = client.post(
+        "/api/forecast/future/range",
+        json={
+            "StockCode": "10002",
+            "start_date": "2010-12-10",
+            "end_date": "2010-12-12",
+        },
+    )
+    assert response.status_code == 200
+    assert [row["date"] for row in response.json["predictions"]] == [
+        "2010-12-10",
+        "2010-12-11",
+        "2010-12-12",
+    ]
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"StockCode": "10002", "target_date": "not-a-date"},
+        {"StockCode": "10002", "target_date": "2010-12-09"},
+        {"StockCode": "not-a-product", "target_date": "2010-12-10"},
+    ],
+)
+def test_future_forecast_rejects_invalid_requests(client, payload):
+    response = client.post("/api/forecast/future", json=payload)
+    expected_status = 404 if payload["StockCode"] == "not-a-product" else 400
+    assert response.status_code == expected_status
+
+
+def test_future_forecast_rejects_excessive_horizon(client):
+    response = client.post(
+        "/api/forecast/future",
+        json={"StockCode": "10002", "target_date": "2011-12-10"},
+    )
+    assert response.status_code == 400
+    assert "too far" in response.json["error"]
+
+
+def test_recursive_features_use_previous_prediction_only(tmp_path: Path):
+    dates = pd.date_range("2020-01-01", periods=30, freq="D")
+    calendar = pd.DataFrame(
+        {
+            "StockCode": ["X"] * 30,
+            "Date": dates,
+            "DailyQuantityDemand": list(range(30)),
+        }
+    )
+    calendar_path = tmp_path / "calendar.csv"
+    calendar.to_csv(calendar_path, index=False)
+
+    class FakeModel:
+        is_loaded = True
+
+        def __init__(self):
+            self.rows = []
+
+        def predict(self, frame):
+            self.rows.append(frame.iloc[0].to_dict())
+            return [100.0]
+
+    model = FakeModel()
+    service = FutureForecastService(calendar_path, model)
+    result = service.forecast("X", pd.Timestamp("2020-01-31"))
+
+    assert result.predicted_demand == 100.0
+    assert model.rows[0]["DemandLag1"] == 29.0
+    assert model.rows[0]["DemandLag7"] == 23.0
+    assert model.rows[0]["DemandRollingMean7"] == pytest.approx(26.0)
+    assert model.rows[0]["DemandRollingMean28"] == pytest.approx(15.5)
+    assert model.rows[0]["DemandTrend7_28"] == pytest.approx(10.5)
