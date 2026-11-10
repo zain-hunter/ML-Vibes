@@ -117,7 +117,7 @@ class AnalyticsService:
             "description": str(description.iloc[0]) if not description.empty else None,
             "total_quantity": int(selected["Quantity"].sum()),
             "total_revenue": float(selected["Revenue"].sum()),
-            "daily": daily.to_dict("records"),
+            "daily": daily.to_dict("records"), 
         }
 
     def forecast_rows(self, stock_code: str, limit: int = 20) -> list[dict[str, Any]]:
